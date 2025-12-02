@@ -494,3 +494,8 @@ data/
 
 ### Environment variables file
 .env
+
+.DS_Store
+
+*/.DS_Store
+*/.idea
