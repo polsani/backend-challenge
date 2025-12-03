@@ -1,0 +1,47 @@
+<div class="login-container">
+  <div class="login-card">
+    <h2 class="login-title">Upload File</h2>
+    
+    <div *ngIf="isLoading" class="loading-message">
+      <p>Loading presigned URL...</p>
+    </div>
+
+    <div *ngIf="errorMessage && !isLoading" class="error-message-container">
+      <p class="error-message">{{ errorMessage }}</p>
+      <button type="button" class="btn btn-blue" (click)="onRetry()">
+        Retry
+      </button>
+    </div>
+
+    <div *ngIf="successMessage" class="success-message-container">
+      <p class="success-message">{{ successMessage }}</p>
+    </div>
+
+    <div *ngIf="!isLoading && presignedUrl" class="upload-form">
+      <div class="form-group">
+        <label for="file-input">Select File</label>
+        <input 
+          type="file" 
+          id="file-input" 
+          class="form-input"
+          (change)="onFileSelected($event)"
+          [disabled]="isUploading">
+        <div *ngIf="selectedFile" class="file-info">
+          <p>Selected: {{ selectedFile.name }} ({{ formatFileSize(selectedFile.size) }})</p>
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button 
+          type="button" 
+          class="btn btn-green" 
+          (click)="uploadFile()"
+          [disabled]="!selectedFile || isUploading">
+          <span *ngIf="!isUploading">Upload</span>
+          <span *ngIf="isUploading">Uploading...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
