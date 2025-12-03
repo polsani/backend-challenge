@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace Challenge.Api.Controllers;
+namespace Challenge.Api.Controllers.v1;
 
 [ApiController]
-[Route("[controller]")]
+[Route("/api/v1/[controller]")]
 public class TransactionController : ControllerBase
 {
     private static readonly string[] Summaries =

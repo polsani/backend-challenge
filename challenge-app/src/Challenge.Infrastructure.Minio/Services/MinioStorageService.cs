@@ -1,4 +1,5 @@
 using Challenge.Domain.Contracts.Storage;
+using Microsoft.Extensions.Configuration;
 using Minio;
 using Minio.DataModel.Args;
 
@@ -7,12 +8,16 @@ namespace Challenge.Infrastructure.Minio.Services;
 public class MinioStorageService : IStorageService
 {
     private readonly IMinioClient _minioClient;
-    private readonly string _bucketName;
+    private readonly string? _bucketName;
 
-    public MinioStorageService(IMinioClient minioClient, string bucketName)
+    public MinioStorageService(IMinioClient minioClient, IConfiguration configuration)
     {
         _minioClient = minioClient;
-        _bucketName = bucketName;
+        _bucketName = configuration.GetSection("Minio:BucketName").Value;
+        
+        if(string.IsNullOrEmpty(_bucketName))
+            throw new Exception("Minio: Bucket name not set");
+        
         EnsureBucketExistsAsync().GetAwaiter().GetResult();
     }
     

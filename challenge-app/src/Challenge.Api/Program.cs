@@ -5,38 +5,50 @@ using Challenge.Infrastructure.Postgres;
 using FluentValidation;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.File("logs/app-.log", rollingInterval: RollingInterval.Day, 
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
 
-// Add services to the container.
-
-builder.Services.AddControllers();
-builder.Services.AddOpenApi();
-builder.Services.AddDbContext<DefaultDbContext>(options =>
+try
 {
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
+    Log.Information("Starting web application");
 
-builder.Services.AddValidatorsFromAssemblyContaining<Program>();
-builder.Services.AddRepositories();
-builder.Services.AddStorage();
-builder.Services.AddMapster();
+    var builder = WebApplication.CreateBuilder(args);
 
-Transaction.Configure();
+    builder.Services.AddControllers();
+    builder.Services
+        .AddOpenApi()
+        .AddDbContext<DefaultDbContext>(options =>
+        {
+            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+        })
+        .AddValidatorsFromAssemblyContaining<Program>()
+        .AddRepositories()
+        .AddStorage(builder.Configuration)
+        .AddMapster();
 
-var app = builder.Build();
+    Transaction.Configure();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    await using (var serviceScope = app.Services.CreateAsyncScope()) ;
+    var app = builder.Build();
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.MapOpenApi();
+        await using (var serviceScope = app.Services.CreateAsyncScope()) ;
     
+    }
+
+    app.UseHttpsRedirection();
+    app.UseAuthorization();
+    app.MapControllers();
+    app.Run();
 }
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
+catch (Exception e)
+{
+    Log.Fatal(e, "Application terminated unexpectedly");
+    throw;
+}
