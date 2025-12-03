@@ -1,8 +1,9 @@
-using Challenge.Domain.Adapters;
 using Challenge.Domain.DataTransferObjects;
+using Challenge.Domain.Entities;
 using Challenge.Domain.Tests.Stubs;
 using Challenge.Domain.ValueObjects;
 using Mapster;
+using Transaction = Challenge.Domain.Adapters.Transaction;
 
 namespace Challenge.Domain.Tests.Adapters;
 
@@ -12,8 +13,6 @@ public class TransactionTests
     {
         Transaction.Configure();    
     }
-    
-    
 
     [Fact(DisplayName = "Should be able to adapt from TransactionIn to Transaction entity")]
     public void ShouldBeAbleToAdaptFromTransactionInToTransactionEntity()
@@ -27,10 +26,16 @@ public class TransactionTests
             StoreName = "Store Name",
             Date = DateOnly.Parse("2020-04-28"),
             Time = TimeOnly.Parse("12:50:00"),
-            Type = TransactionType.Get(1),
+            Type =  TransactionType.Get(1),
             Value = 678.82m,
             TaxId = new TaxId("28584565345")
         });
+    }
+    
+    [Fact(DisplayName = "Should throw an exception when TransactionIn is invalid")]
+    public void  ShouldThrowAnExceptionWhenTransactionInIsInvalid()
+    {
+        Assert.Throws<ArgumentException>(() => TransactionsStubs.ValidTransactionIn.Adapt<Entities.Transaction>());
     }
 
     [Fact(DisplayName = "Should generate Id")]

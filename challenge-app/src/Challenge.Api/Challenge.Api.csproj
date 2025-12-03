@@ -19,6 +19,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Challenge.Domain\Challenge.Domain.csproj" />
+      <ProjectReference Include="..\Challenge.Infrastructure.Minio\Challenge.Infrastructure.Minio.csproj" />
+      <ProjectReference Include="..\Challenge.Infrastructure.Postgres\Challenge.Infrastructure.Postgres.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
 using Challenge.Domain.DataTransferObjects;
+using Challenge.Domain.Entities;
 using Challenge.Domain.ValueObjects;
 
 namespace Challenge.Domain.Tests.Stubs;
@@ -13,6 +14,18 @@ public static class TransactionsStubs
         StoreOwner = "Owner",
         StoreName = "Store Name",
         TaxId = "28584565345",
+        Time = "125000",
+        Date = "20200428"
+    };
+    
+    public static readonly TransactionIn InvalidTransactionIn = new()
+    {
+        Type = "1",
+        Value = "00067882",
+        Card = "3424********8752",
+        StoreOwner = "Owner",
+        StoreName = "Store Name",
+        TaxId = "28584565645",
         Time = "125000",
         Date = "20200428"
     };

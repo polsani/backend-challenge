@@ -1,3 +1,4 @@
+using Challenge.Domain.Entities;
 using Challenge.Domain.ValueObjects;
 
 namespace Challenge.Domain.Adapters;

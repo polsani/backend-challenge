@@ -1,12 +1,20 @@
-namespace Challenge.Domain.ValueObjects;
+using Challenge.Domain.ValueObjects;
 
-public struct TransactionType(ushort type, string description, OperationNature nature, OperationSign sign)
+namespace Challenge.Domain.Entities;
+
+public class TransactionType(
+    ushort type,
+    string description,
+    OperationNature nature,
+    OperationSign sign)
 {
-    public ushort Type { get; private set; } = type;
-    public string Description { get; private set; } = description;
-    public OperationNature Nature { get; private set; } = nature;
-    public OperationSign Sign { get; private set; } = sign;
-    
+    public ushort Type { get; init; } = type;
+    public string Description { get; init; } = description;
+    public OperationNature Nature { get; init; } = nature;
+    public OperationSign Sign { get; init; } = sign;
+
+    public virtual ICollection<Transaction> Transactions { get; init; }
+
     public static TransactionType Get(ushort type) => TransactionTypes.First(x => x.Type == type);
 
     private static TransactionType[] TransactionTypes =>

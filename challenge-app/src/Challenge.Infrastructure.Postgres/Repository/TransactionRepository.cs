@@ -1,13 +1,14 @@
 using Challenge.Domain.Contracts.Repository;
 using Challenge.Domain.Entities;
 using EFCore.BulkExtensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Challenge.Infrastructure.Postgres.Repository;
 
-public class TransactionRepository : ITransactionRepository
+public class TransactionRepository(DefaultDbContext dbContext) : ITransactionRepository
 {
     private const int BatchSize = 1000;
-    private readonly DefaultDbContext _dbContext = new("");
+
     private readonly BulkConfig _bulkConfig = new()
     {
         BatchSize = BatchSize,
@@ -17,6 +18,16 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task ImportTransactions(IEnumerable<Transaction> transactions)
     {
-        await _dbContext.BulkInsertAsync(transactions, _bulkConfig);
+        await dbContext.BulkInsertAsync(transactions, _bulkConfig);
+    }
+
+    public async Task<IEnumerable<Transaction>> GetTransactions(int pageSize = 0, int pageNumber = 0)
+    {
+        IQueryable<Transaction> query = dbContext.Transactions.OrderBy(x=>x.Id);
+
+        if (pageSize != 0)
+            query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
+        
+        return await query.ToListAsync();
     }
 }
