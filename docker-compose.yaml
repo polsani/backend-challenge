@@ -1,11 +1,33 @@
 version: '3.9'
 services:
+  backend:
+    build: challenge-app/.
+    container_name: backend
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+    ports:
+      - 8080:8080
+      - 8081:8081
+    depends_on:
+      - postgres
+      - minio
+    volumes:
+      - ./logs:/app/logs
+
+  frontend:
+    build: challenge-web/.
+    container_name: frontend
+    ports:
+      - 4200:80
+    depends_on:
+      - backend
+
   postgres:
     image: postgres:18.1-alpine
     container_name: postgres
     environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: password@123
+      POSTGRES_USER: postgres
       POSTGRES_DB: challenge
     ports:
       - 5432:5432
@@ -40,6 +62,20 @@ services:
     ports:
       - 3100:3100
 
+  promtail:
+    image: grafana/promtail:3.5.8
+    container_name: promtail
+    command: -config.file=/etc/promtail/promtail.yaml
+    ports:
+      - 9080:9080
+    volumes:
+      - "./logs:/logs/backend"
+      - ./config/promtail.yaml:/etc/promtail/config.yaml
+      - "./config/position:/position"
+    depends_on:
+      - loki
+      - backend
+
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:v0.18.1
     container_name: postgres-exporter
@@ -58,8 +94,28 @@ services:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_ROOT_USER: minio_admin
+      MINIO_ROOT_PASSWORD: minio_admin_123
     volumes:
-      - ~/minio/data:/data # Map host directory to container's data directory
+      - ./minio/data:/data
     command: server /data --console-address ":9001"
+
+
+  createbuckets:
+    image: minio/mc:latest
+    container_name: minio-create-bucket
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      /usr/bin/mc alias set myminio http://minio:9000 minio_admin minio_admin_123;
+      /usr/bin/mc mb myminio/transactions --ignore-existing;
+      /usr/bin/mc mb myminio/failed-transactions --ignore-existing;
+      /usr/bin/mc anonymous set download myminio/transactions;
+      /usr/bin/mc anonymous set download myminio/failed-transactions;
+      echo '<CORSConfiguration><CORSRule><AllowedOrigin>*</AllowedOrigin><AllowedMethod>GET</AllowedMethod><AllowedMethod>PUT</AllowedMethod><AllowedMethod>POST</AllowedMethod><AllowedMethod>DELETE</AllowedMethod><AllowedMethod>HEAD</AllowedMethod><AllowedHeader>*</AllowedHeader><ExposeHeader>ETag</ExposeHeader><MaxAgeSeconds>3000</MaxAgeSeconds></CORSRule></CORSConfiguration>' > /tmp/cors.xml;
+      /usr/bin/mc cors set myminio/transactions /tmp/cors.xml;
+      /usr/bin/mc cors set myminio/failed-transactions /tmp/cors.xml;
+      exit 0;
+      "

@@ -1,5 +1,6 @@
 using Challenge.Domain.Contracts.Storage;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Minio;
 using Minio.DataModel.Args;
 
@@ -8,15 +9,23 @@ namespace Challenge.Infrastructure.Minio.Services;
 public class MinioStorageService : IStorageService
 {
     private readonly IMinioClient _minioClient;
+    private readonly ILogger<MinioStorageService> _logger;
     private readonly string? _bucketName;
+    private readonly string? _failedBucketName;
 
-    public MinioStorageService(IMinioClient minioClient, IConfiguration configuration)
+    public MinioStorageService(IMinioClient minioClient, IConfiguration configuration, 
+        ILogger<MinioStorageService> logger)
     {
         _minioClient = minioClient;
+        _logger = logger;
         _bucketName = configuration.GetSection("Minio:BucketName").Value;
+        _failedBucketName = configuration.GetSection("Minio:FailedBucketName").Value;
         
         if(string.IsNullOrEmpty(_bucketName))
             throw new Exception("Minio: Bucket name not set");
+        
+        if(string.IsNullOrEmpty(_failedBucketName))
+            throw new Exception("Minio: Failed bucket name not set");
         
         EnsureBucketExistsAsync().GetAwaiter().GetResult();
     }
@@ -33,6 +42,18 @@ public class MinioStorageService : IStorageService
             .WithContentType(contentType));
 
         return objectName;
+    }
+
+    public async Task UploadFailedFileAsync(Stream fileStream, string fileName, string contentType)
+    {
+        _logger.LogWarning("Invalid transactions persisted into {bucket} in file {fileName}", _failedBucketName, fileName);
+        
+        await _minioClient.PutObjectAsync(new PutObjectArgs()
+            .WithBucket(_failedBucketName)
+            .WithObject(fileName)
+            .WithStreamData(fileStream)
+            .WithObjectSize(fileStream.Length)
+            .WithContentType(contentType));
     }
 
     public async Task<Stream> DownloadFileAsync(string fileName)
@@ -55,9 +76,17 @@ public class MinioStorageService : IStorageService
             .WithObject(fileName));
     }
 
-    public async Task<string> GetPresignedUrlAsync(string fileName, int expiryInSeconds = 3600)
+    public async Task<string> GetPresignedGetUrlAsync(string fileName, int expiryInSeconds = 3600)
     {
         return await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
+            .WithBucket(_bucketName)
+            .WithObject(fileName)
+            .WithExpiry(expiryInSeconds));
+    }
+    
+    public async Task<string> GetPresignedPutUrlAsync(string fileName, int expiryInSeconds = 3600)
+    {
+        return await _minioClient.PresignedPutObjectAsync(new PresignedPutObjectArgs()
             .WithBucket(_bucketName)
             .WithObject(fileName)
             .WithExpiry(expiryInSeconds));

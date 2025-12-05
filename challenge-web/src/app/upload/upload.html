@@ -13,11 +13,7 @@
       </button>
     </div>
 
-    <div *ngIf="successMessage" class="success-message-container">
-      <p class="success-message">{{ successMessage }}</p>
-    </div>
-
-    <div *ngIf="!isLoading && presignedUrl" class="upload-form">
+    <div *ngIf="!isLoading && presignedUrl && !errorMessage" class="upload-form">
       <div class="form-group">
         <label for="file-input">Select File</label>
         <input 
@@ -41,6 +37,37 @@
           <span *ngIf="isUploading">Uploading...</span>
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dialog Modal -->
+<div *ngIf="showDialog" class="dialog-overlay" (click)="closeDialog()">
+  <div class="dialog-content" (click)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <h3 class="dialog-title">Upload Results</h3>
+      <button type="button" class="dialog-close" (click)="closeDialog()" aria-label="Close">
+        ×
+      </button>
+    </div>
+    <div class="dialog-body" *ngIf="processResult">
+      <div class="result-item">
+        <span class="result-label">Total Lines:</span>
+        <span class="result-value">{{ processResult.totalLines }}</span>
+      </div>
+      <div class="result-item">
+        <span class="result-label success">Success Count:</span>
+        <span class="result-value success">{{ processResult.SuccessCount }}</span>
+      </div>
+      <div class="result-item">
+        <span class="result-label error">Failed Count:</span>
+        <span class="result-value error">{{ processResult.FailedCount }}</span>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button type="button" class="btn btn-blue" (click)="closeDialog()">
+        Close
+      </button>
     </div>
   </div>
 </div>

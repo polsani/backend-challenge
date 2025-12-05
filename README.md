@@ -1,99 +1,31 @@
-# Programming Challenge - Back-end Position
+# Challenge
 
-Please read this document carefully from beginning to end. The purpose of this test is to assess your technical programming skills. The challenge consists of parsing this text file (https://github.com/ByCodersTec/desafio-ruby-on-rails/blob/master/CNAB.txt) and saving its information (financial transactions) into a database of your choice. This challenge should be completed by you at home. Take as much time as you need, but usually you shouldn't need more than a few hours.
+The challenge was to create a transaction file upload, where each line would be stored in the database for later reference.
 
-## Challenge Submission Instructions
+The focus was not on completing the project as a whole, but rather on creating a robust architecture capable of supporting a very large scale without compromising performance or using excessive computational resources.
 
-1.  First, fork this project to your Github account (create one if you don't have it).
-2.  Implement the project as described below in your local clone.
-3.  Send the project or the fork/link to your ByCoders contact with a copy to **rh@bycoders.com.br**.
+Another focus was on code extensibility, maintainability, and testability.
 
-## Project Description
+## Architecture
+The initial architectural idea for this exercise involves an Angular front-end making requests to a .NET back-end. The .NET application manages its logs by exporting them to a local folder in the form of a structured log file, which is then mapped to a volume managed by Docker Compose. Within the same Docker Compose definition file, we also have Grafana, Grafana Loki, and Promtail, which reads these log files and indexes them for viewing within Grafana. We also use Postgres for data persistence and Minio, which is a bucket that implements the AWS S3 API. 
 
-You received a CNAB file with financial transaction data from several stores. We need to create a way for this data to be imported into a database. Your task is to create a web interface that accepts uploads of the CNAB file (https://github.com/ByCodersTec/desafio-ruby-on-rails/blob/master/CNAB.txt), normalizes the data, stores it in a relational database, and displays this information on the screen.
+The idea behind this architecture is to enable production-level scaling. Since we are talking about a transaction file, it can typically have millions, if not billions, of lines. For this reason, we cannot upload directly to the server, to the backend. This can compromise performance and is not the most appropriate case when we are talking about a production system with this type of scale. Therefore, the front-end makes a request to the back-end for a pre-signed URL and, with this pre-signed URL, uploads directly to the bucket, in this case managed by Minio. Next, the back-end application downloads this file, processes it, and persists this data within Postgres.
 
-## Web Application Requirements
+![image](resources/architecture.png)
 
-Your web application **MUST**:
+## Overengineering
 
-1.  Have a screen (via a form) to upload the file\
-    *Extra points if you don't use a popular CSS framework.*
+Regarding overengineering, this project is clearly more complex than expected to be solved in a simple way. However, as mentioned earlier, the focus was on a solution that can be used on a large scale of data and is also easy to extend, making it possible to easily add new files to be imported, validated, and tested.
 
-2.  Parse the received file, normalize the data, and correctly save it
-    in a relational database\
-    *(Pay attention to the CNAB documentation below.)*
+The persistence of files that were imported incorrectly is also added for later reporting or manual processing, whether for verification or adjustments.
 
-3.  Display a **list of imported operations by store**, including a
-    **total account balance**
+## Areas for improvement
 
-4.  Be written in your preferred programming language
+It would also be interesting, as an area for improvement, to implement a login. In this case, using an application called Key Cloak, which would be responsible for creating and managing user accounts for the system. The addition of customized metrics such as the number of imported transactions, the number of transactions with errors, all to create a monitoring dashboard within Grafana. Unfortunately, due to the complexity involved, it was not possible to complete the entire implementation in this project within the time allowed.
 
-5.  Be simple to configure and run in a Unix-based system (Linux or
-    macOS)\
-    *(Use only free/open-source languages and libraries.)*
+## How to use
+All dependencies are contained in the docker-compose file, requiring docker and the docker-compose CLI to be installed.
+Simply run the command `docker-compose up -d` (you can use -d or not, to run attached to the terminal or not).
 
-6.  Use **Git** with atomic and well-described commits
-
-7.  Use **PostgreSQL, MySQL, or SQL Server**
-
-8.  Have **automated tests**
-
-9.  Use **Docker Compose**\
-    *Extra points if you use it.*
-
-10. Include a **README** describing the project and its setup
-
-11. Include instructions describing **how to consume the API endpoint**
-
-## The application does NOT need to:
-
-1.  Handle authentication or authorization\
-    *Extra points if implemented; even more if OAuth.*
-
-2.  Document the API\
-    *Optional --- but earns extra points.*
-
-## CNAB Documentation
-
-| Field        | Start | End | Size | Description                                 |
-|--------------|:-----:|:---:|:----:|---------------------------------------------|
-| Type         | 1     | 1   | 1    | Transaction type                             |
-| Date         | 2     | 9   | 8    | Date of occurrence                           |
-| Value        | 10    | 19  | 10   | Transaction amount (divide by 100.00)        |
-| CPF          | 20    | 30  | 11   | Beneficiary's CPF                            |
-| Card         | 31    | 42  | 12   | Card used in the transaction                 |
-| Time         | 43    | 48  | 6    | Time of occurrence (UTC-3)                   |
-| Store Owner  | 49    | 62  | 14   | Store representative name                    |
-| Store Name   | 63    | 81  | 19   | Store name                                   |
-
-## Transaction Types
-
-| Type | Description    | Nature  | Sign |
-|------|----------------|---------|------|
-| 1    | Debit          | Income  | +    |
-| 2    | Boleto         | Expense | -    |
-| 3    | Financing      | Expense | -    |
-| 4    | Credit         | Income  | +    |
-| 5    | Loan Receipt   | Income  | +    |
-| 6    | Sales          | Income  | +    |
-| 7    | TED Receipt    | Income  | +    |
-| 8    | DOC Receipt    | Income  | +    |
-| 9    | Rent           | Expense | -    |
-
-
-## Evaluation Criteria
-
-Your project will be evaluated based on:
-
-1.  Whether your application meets the basic requirements
-2.  Documentation on environment setup and application execution
-3.  Whether you followed the challenge submission instructions
-4.  Quality and coverage of automated tests
-
-We will also assess:
-
--   Your familiarity with standard libraries
--   Your experience with object-oriented programming
--   The structure and maintainability of your project
-
-## Good luck!
+The front-end application is configured to run on port 4200 and can be accessed in the browser via the URL `http://localhost:4200`.
+![image](resources/upload.png)

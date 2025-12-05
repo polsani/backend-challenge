@@ -1,11 +1,14 @@
+using Challenge.Api.ErrorHandling;
+using Challenge.Domain;
 using Challenge.Domain.Adapters;
-using Challenge.Domain.DataTransferObjects;
 using Challenge.Infrastructure.Minio;
 using Challenge.Infrastructure.Postgres;
 using FluentValidation;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Metrics;
 using Serilog;
+using Transaction = Challenge.Domain.Entities.Transaction;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
@@ -20,35 +23,61 @@ try
     var builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddControllers();
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowAll", policy =>
+        {
+            policy.AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+    });
+
+    builder.Services.AddOpenTelemetry()
+        .WithMetrics(metrics =>
+        {
+            metrics.AddPrometheusExporter()
+                .AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation();
+        });
+    
     builder.Services
         .AddOpenApi()
+        .AddEndpointsApiExplorer()
         .AddDbContext<DefaultDbContext>(options =>
         {
             options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
         })
-        .AddValidatorsFromAssemblyContaining<Program>()
+        .AddValidatorsFromAssemblyContaining<Transaction>()
         .AddRepositories()
+        .AddDomain()
         .AddStorage(builder.Configuration)
-        .AddMapster();
+        .AddMapster() ;
 
-    Transaction.Configure();
+    AdapterModule.ConfigureAll();
+    builder.Host.UseSerilog();
 
     var app = builder.Build();
 
     if (app.Environment.IsDevelopment())
     {
         app.MapOpenApi();
-        await using (var serviceScope = app.Services.CreateAsyncScope()) ;
-    
+    }
+    else
+    {
+        app.UseHttpsRedirection();
     }
 
-    app.UseHttpsRedirection();
+    app.MapPrometheusScrapingEndpoint();
+    
+    app.UseSerilogRequestLogging();
+    app.UseMiddleware<ErrorHandlingMiddleware>();
     app.UseAuthorization();
+    app.UseCors("AllowAll");
     app.MapControllers();
     app.Run();
 }
 catch (Exception e)
 {
     Log.Fatal(e, "Application terminated unexpectedly");
-    throw;
 }

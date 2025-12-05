@@ -76,17 +76,6 @@
   margin-bottom: 16px;
 }
 
-.success-message-container {
-  text-align: center;
-  padding: 20px;
-}
-
-.success-message {
-  color: #28a745;
-  font-size: 16px;
-  font-weight: 600;
-}
-
 .loading-message {
   text-align: center;
   padding: 40px 20px;
@@ -156,6 +145,134 @@
   transform: translateY(0);
 }
 
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.dialog-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow: auto;
+  animation: dialogFadeIn 0.3s ease-out;
+}
+
+@keyframes dialogFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.dialog-title {
+  margin: 0;
+  color: #333;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.dialog-close {
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.dialog-close:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.dialog-body {
+  padding: 24px;
+}
+
+.result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.result-item:last-child {
+  border-bottom: none;
+}
+
+.result-label {
+  font-weight: 600;
+  color: #555;
+  font-size: 16px;
+}
+
+.result-label.success {
+  color: #28a745;
+}
+
+.result-label.error {
+  color: #e74c3c;
+}
+
+.result-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.result-value.success {
+  color: #28a745;
+}
+
+.result-value.error {
+  color: #e74c3c;
+}
+
+.dialog-footer {
+  padding: 24px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.dialog-footer .btn {
+  min-width: 100px;
+}
+
 @media (max-width: 480px) {
   .login-card {
     padding: 30px 20px;
@@ -163,6 +280,17 @@
   
   .login-title {
     font-size: 24px;
+  }
+
+  .dialog-content {
+    max-width: 100%;
+    margin: 10px;
+  }
+
+  .dialog-header,
+  .dialog-body,
+  .dialog-footer {
+    padding: 20px;
   }
 }
 

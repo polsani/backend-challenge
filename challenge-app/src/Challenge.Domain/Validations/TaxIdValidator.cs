@@ -3,7 +3,7 @@ namespace Challenge.Domain.Validations;
 using ValueObjects;
 using FluentValidation;
 
-internal sealed class TaxIdValidator : AbstractValidator<TaxId>
+public sealed class TaxIdValidator : AbstractValidator<TaxId>
 {
     public TaxIdValidator()
     {

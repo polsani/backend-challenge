@@ -16,7 +16,7 @@ public class TransactionRepository(DefaultDbContext dbContext) : ITransactionRep
         BulkCopyTimeout = 0
     };
 
-    public async Task ImportTransactions(IEnumerable<Transaction> transactions)
+    public async Task ImportTransactionsAsync(IEnumerable<Transaction> transactions)
     {
         await dbContext.BulkInsertAsync(transactions, _bulkConfig);
     }

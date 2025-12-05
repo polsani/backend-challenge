@@ -14,5 +14,5 @@ scrape_configs:
   - targets:
       - localhost
     labels:
-      job: my-application
-      __path__: /logs/my-application/*log
+      job: backend
+      __path__: /logs/backend/*log

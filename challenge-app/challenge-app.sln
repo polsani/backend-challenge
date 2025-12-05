@@ -2,17 +2,21 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{BC108DE1-9815-49AF-B410-0AAFEF629AF3}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{A86EA7CD-7D14-46AD-B139-74862BCC3022}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "test", "{A86EA7CD-7D14-46AD-B139-74862BCC3022}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Challenge.Domain", "src\Challenge.Domain\Challenge.Domain.csproj", "{A916778E-98FC-499E-9D3C-37B086E3176D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Challenge.Infrastructure.Minio", "src\Challenge.Infrastructure.Minio\Challenge.Infrastructure.Minio.csproj", "{4D197278-F0FA-4318-8166-61B93F65A6F8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Challenge.Domain.Tests", "Challenge.Domain.Tests\Challenge.Domain.Tests.csproj", "{D9CD6DC2-F94E-4E1B-8BE6-71AC65D17A24}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Challenge.Domain.Tests", "test\Challenge.Domain.Tests\Challenge.Domain.Tests.csproj", "{D9CD6DC2-F94E-4E1B-8BE6-71AC65D17A24}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Challenge.Infrastructure.Postgres", "src\Challenge.Infrastructure.Postgres\Challenge.Infrastructure.Postgres.csproj", "{F88D67AD-06DB-4C78-BD82-56BA98C86171}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Challenge.Api", "src\Challenge.Api\Challenge.Api.csproj", "{A0428AEE-8DC5-49E3-AF5B-9B0895382DB6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Challenge.Infrastructure.Tests", "test\Challenge.Infrastructure.Tests\Challenge.Infrastructure.Tests.csproj", "{44C9B25F-90A9-415D-BFCD-0908B6A16728}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Challenge.Api.Tests", "test\Challenge.Api.Tests\Challenge.Api.Tests.csproj", "{6B0F2318-F0FD-47A9-A46F-84A9CF7060AF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,6 +44,14 @@ Global
 		{A0428AEE-8DC5-49E3-AF5B-9B0895382DB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0428AEE-8DC5-49E3-AF5B-9B0895382DB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0428AEE-8DC5-49E3-AF5B-9B0895382DB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44C9B25F-90A9-415D-BFCD-0908B6A16728}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44C9B25F-90A9-415D-BFCD-0908B6A16728}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44C9B25F-90A9-415D-BFCD-0908B6A16728}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44C9B25F-90A9-415D-BFCD-0908B6A16728}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B0F2318-F0FD-47A9-A46F-84A9CF7060AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B0F2318-F0FD-47A9-A46F-84A9CF7060AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B0F2318-F0FD-47A9-A46F-84A9CF7060AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B0F2318-F0FD-47A9-A46F-84A9CF7060AF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A916778E-98FC-499E-9D3C-37B086E3176D} = {BC108DE1-9815-49AF-B410-0AAFEF629AF3}
@@ -47,5 +59,7 @@ Global
 		{D9CD6DC2-F94E-4E1B-8BE6-71AC65D17A24} = {A86EA7CD-7D14-46AD-B139-74862BCC3022}
 		{F88D67AD-06DB-4C78-BD82-56BA98C86171} = {BC108DE1-9815-49AF-B410-0AAFEF629AF3}
 		{A0428AEE-8DC5-49E3-AF5B-9B0895382DB6} = {BC108DE1-9815-49AF-B410-0AAFEF629AF3}
+		{44C9B25F-90A9-415D-BFCD-0908B6A16728} = {A86EA7CD-7D14-46AD-B139-74862BCC3022}
+		{6B0F2318-F0FD-47A9-A46F-84A9CF7060AF} = {A86EA7CD-7D14-46AD-B139-74862BCC3022}
 	EndGlobalSection
 EndGlobal

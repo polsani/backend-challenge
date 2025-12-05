@@ -1,3 +1,4 @@
+using Challenge.Domain.Contracts.Services;
 using Challenge.Domain.Contracts.Storage;
 using Microsoft.AspNetCore.Mvc;
 
@@ -5,22 +6,28 @@ namespace Challenge.Api.Controllers.v1;
 
 [ApiController]
 [Route("/api/v1/[controller]")]
-public class ImportController : Controller
+public class ImportController(IStorageService storageService, IImporterService  importerService)
+    : Controller
 {
-    private readonly IStorageService _storageService;
-    private readonly ILogger<ImportController> _logger;
-
-    public ImportController(IStorageService storageService, ILogger<ImportController> logger)
-    {
-        _storageService = storageService;
-        _logger = logger;
-    }
-    
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> GetPresignedUrlAsync()
     {
-        var url = await _storageService.GetPresignedUrlAsync(Guid.NewGuid().ToString());
-        _logger.LogDebug("Generating new presignedUrl: {Url}", url);
-        return Json(url);
+        var filename = $"{Guid.NewGuid()}.txt";
+        var url = await storageService.GetPresignedPutUrlAsync(filename);
+
+        return Json(new
+        {
+            url = url.Replace("http://minio", "http://localhost"),
+            filename
+        });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ImportTransactionsAsync([FromBody] string filename)
+    {
+        var stream = await storageService.DownloadFileAsync(filename);
+        var result = await importerService.ImportFromStreamAsync(stream, filename);
+        
+        return Ok(result);
     }
 }

@@ -21,7 +21,7 @@ public static class DependencyRegister
         
         return services
             .AddMinio(config => 
-                config.WithEndpoint(minioUrl).WithCredentials(minioAccessKey, minioSecretKey))
+                config.WithEndpoint(minioUrl).WithCredentials(minioAccessKey, minioSecretKey).WithSSL(false).Build())
             .AddScoped<IStorageService, MinioStorageService>();
     }
 }

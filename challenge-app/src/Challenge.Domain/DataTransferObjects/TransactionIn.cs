@@ -2,12 +2,12 @@ namespace Challenge.Domain.DataTransferObjects;
 
 public struct TransactionIn
 {
-    public string Type  { get; set; }
-    public string Date { get; set; }
-    public string Value { get; set; }
-    public string TaxId { get; set; }
-    public string Card { get; set; } 
-    public string Time { get; set; }
-    public string StoreOwner { get; set; }
-    public string StoreName { get; set; }
+    public string Type  { get; init; }
+    public string Date { get; init; }
+    public string Value { get; init; }
+    public string TaxId { get; init; }
+    public string Card { get; init; } 
+    public string Time { get; init; }
+    public string StoreOwner { get; init; }
+    public string StoreName { get; init; }
 }

@@ -3,7 +3,7 @@ namespace Challenge.Domain.Validations;
 using Entities;
 using FluentValidation;
 
-internal sealed class TransactionValidator : AbstractValidator<Transaction>
+public sealed class TransactionValidator : AbstractValidator<Transaction>
 {
     public TransactionValidator()
     {

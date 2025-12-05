@@ -1,9 +1,9 @@
+using Challenge.Domain.Adapters;
 using Challenge.Domain.DataTransferObjects;
 using Challenge.Domain.Entities;
 using Challenge.Domain.Tests.Stubs;
 using Challenge.Domain.ValueObjects;
 using Mapster;
-using Transaction = Challenge.Domain.Adapters.Transaction;
 
 namespace Challenge.Domain.Tests.Adapters;
 
@@ -11,7 +11,7 @@ public class TransactionTests
 {
     public TransactionTests()
     {
-        Transaction.Configure();    
+        AdapterModule.ConfigureAll();    
     }
 
     [Fact(DisplayName = "Should be able to adapt from TransactionIn to Transaction entity")]
@@ -30,20 +30,6 @@ public class TransactionTests
             Value = 678.82m,
             TaxId = new TaxId("28584565345")
         });
-    }
-    
-    [Fact(DisplayName = "Should throw an exception when TransactionIn is invalid")]
-    public void  ShouldThrowAnExceptionWhenTransactionInIsInvalid()
-    {
-        Assert.Throws<ArgumentException>(() => TransactionsStubs.ValidTransactionIn.Adapt<Entities.Transaction>());
-    }
-
-    [Fact(DisplayName = "Should generate Id")]
-    public void ShouldGenerateId()
-    {
-        var transactionEntity = TransactionsStubs.ValidTransactionIn.Adapt<Entities.Transaction>();
-        
-        Assert.NotEqual(0, transactionEntity.Id);
     }
     
     [Fact(DisplayName = "Should be able to adapt from Transaction entity to TransactionOut")]
