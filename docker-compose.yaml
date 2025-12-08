@@ -70,7 +70,7 @@ services:
       - 9080:9080
     volumes:
       - "./logs:/logs/backend"
-      - ./config/promtail.yaml:/etc/promtail/config.yaml
+      - ./config/promtail.yaml:/etc/promtail/promtail.yaml
       - "./config/position:/position"
     depends_on:
       - loki
@@ -96,6 +96,7 @@ services:
     environment:
       MINIO_ROOT_USER: minio_admin
       MINIO_ROOT_PASSWORD: minio_admin_123
+      MINIO_SERVER_URL: "http://localhost:9000"
     volumes:
       - ./minio/data:/data
     command: server /data --console-address ":9001"

@@ -14,6 +14,10 @@
     </div>
 
     <div *ngIf="!isLoading && presignedUrl && !errorMessage" class="upload-form">
+      <div *ngIf="showSummary" class="summary-warning-alert">
+        <p>Show summary increase the amount of memory used and decrease the performance, use only with small files.</p>
+      </div>
+      
       <div class="form-group">
         <label for="file-input">Select File</label>
         <input 
@@ -25,6 +29,17 @@
         <div *ngIf="selectedFile" class="file-info">
           <p>Selected: {{ selectedFile.name }} ({{ formatFileSize(selectedFile.size) }})</p>
         </div>
+      </div>
+
+      <div class="form-group">
+        <label class="toggle-label">
+          <input 
+            type="checkbox" 
+            [(ngModel)]="showSummary"
+            [disabled]="isUploading"
+            class="toggle-checkbox">
+          <span class="toggle-text">Show summary</span>
+        </label>
       </div>
 
       <div class="button-group">
@@ -41,7 +56,6 @@
   </div>
 </div>
 
-<!-- Dialog Modal -->
 <div *ngIf="showDialog" class="dialog-overlay" (click)="closeDialog()">
   <div class="dialog-content" (click)="$event.stopPropagation()">
     <div class="dialog-header">
@@ -57,11 +71,49 @@
       </div>
       <div class="result-item">
         <span class="result-label success">Success Count:</span>
-        <span class="result-value success">{{ processResult.SuccessCount }}</span>
+        <span class="result-value success">{{ processResult.successCount }}</span>
       </div>
       <div class="result-item">
         <span class="result-label error">Failed Count:</span>
-        <span class="result-value error">{{ processResult.FailedCount }}</span>
+        <span class="result-value error">{{ processResult.failedCount }}</span>
+      </div>
+      
+      <div *ngIf="processResult.summary && summaryRows.length > 0" class="summary-section">
+        <h4 class="summary-title">Summary by Store</h4>
+        <div class="table-container">
+          <table class="summary-table">
+            <thead>
+              <tr>
+                <th>Store Name</th>
+                <th>Type</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Value</th>
+                <th>Card</th>
+                <th>Tax ID</th>
+                <th>Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of summaryRows" [class.balance-row]="row.isBalanceRow">
+                <ng-container *ngIf="!row.isBalanceRow">
+                  <td>{{ row.storeName }}</td>
+                  <td>{{ row.transaction.type?.description || '' }}</td>
+                  <td>{{ row.transaction.date }}</td>
+                  <td>{{ row.transaction.time }}</td>
+                  <td>{{ formatCurrency(row.transaction.value) }}</td>
+                  <td>{{ row.transaction.card }}</td>
+                  <td>{{ row.transaction.taxId?.formattedTaxId || '' }}</td>
+                  <td></td>
+                </ng-container>
+                <ng-container *ngIf="row.isBalanceRow">
+                  <td [attr.colspan]="7" class="balance-label">Balance for {{ row.storeName }}:</td>
+                  <td class="balance-value">{{ formatCurrency(row.balance) }}</td>
+                </ng-container>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
     <div class="dialog-footer">

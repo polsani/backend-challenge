@@ -1,4 +1,5 @@
 using Challenge.Domain.Contracts.Storage;
+using Challenge.Domain.DataTransferObjects;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Minio;
@@ -56,17 +57,12 @@ public class MinioStorageService : IStorageService
             .WithContentType(contentType));
     }
 
-    public async Task<Stream> DownloadFileAsync(string fileName)
+    public async Task DownloadFileStreamAsync(string fileName, Func<Stream, CancellationToken, Task<ImportResult?>> callback)
     {
-        var memoryStream = new MemoryStream();
-            
         await _minioClient.GetObjectAsync(new GetObjectArgs()
             .WithBucket(_bucketName)
             .WithObject(fileName)
-            .WithCallbackStream(stream => stream.CopyTo(memoryStream)));
-
-        memoryStream.Position = 0;
-        return memoryStream;
+            .WithCallbackStream(callback));
     }
 
     public async Task DeleteFileAsync(string fileName)

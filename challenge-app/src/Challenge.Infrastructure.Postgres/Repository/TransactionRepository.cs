@@ -2,32 +2,39 @@ using Challenge.Domain.Contracts.Repository;
 using Challenge.Domain.Entities;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Npgsql;
+using NpgsqlTypes;
 
 namespace Challenge.Infrastructure.Postgres.Repository;
 
-public class TransactionRepository(DefaultDbContext dbContext) : ITransactionRepository
+public class TransactionRepository(IConfiguration configuration) : ITransactionRepository
 {
-    private const int BatchSize = 1000;
-
-    private readonly BulkConfig _bulkConfig = new()
-    {
-        BatchSize = BatchSize,
-        SetOutputIdentity = false,
-        BulkCopyTimeout = 0
-    };
-
     public async Task ImportTransactionsAsync(IEnumerable<Transaction> transactions)
     {
-        await dbContext.BulkInsertAsync(transactions, _bulkConfig);
-    }
-
-    public async Task<IEnumerable<Transaction>> GetTransactions(int pageSize = 0, int pageNumber = 0)
-    {
-        IQueryable<Transaction> query = dbContext.Transactions.OrderBy(x=>x.Id);
-
-        if (pageSize != 0)
-            query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
-        
-        return await query.ToListAsync();
+        await using var connection = new NpgsqlConnection(configuration.GetConnectionString("DefaultConnection"));
+        await connection.OpenAsync();
+    
+        await using var writer = await connection.BeginBinaryImportAsync(
+            """
+            COPY transactions (type, date, value, cpf, card, time, 
+                      store_owner, store_name) 
+                      FROM STDIN (FORMAT BINARY)
+            """);
+    
+        foreach (var t in transactions)
+        {
+            await writer.StartRowAsync();
+            await writer.WriteAsync((short)t.Type.Type, NpgsqlDbType.Smallint);
+            await writer.WriteAsync(t.Date, NpgsqlDbType.Date);
+            await writer.WriteAsync(t.Value, NpgsqlDbType.Numeric);
+            await writer.WriteAsync(t.TaxId.Value);
+            await writer.WriteAsync(t.Card);
+            await writer.WriteAsync(t.Time, NpgsqlDbType.Time);
+            await writer.WriteAsync(t.StoreOwner);
+            await writer.WriteAsync(t.StoreName);
+        }
+    
+        await writer.CompleteAsync();
     }
 }

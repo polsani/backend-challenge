@@ -1,5 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom, timeout, catchError } from 'rxjs';
 import { of } from 'rxjs';
@@ -9,15 +10,54 @@ interface ImportResponse {
   filename: string;
 }
 
+interface TransactionType {
+  type: number;
+  description: string;
+  nature: number;
+  sign: number;
+  transactions: any;
+}
+
+interface Transaction {
+  type: TransactionType;
+  date: string;
+  value: number;
+  taxId: {
+    value: string;
+    formattedTaxId: string;
+  };
+  card: string;
+  time: string;
+  storeOwner: string;
+  storeName: string;
+}
+
+interface StoreSummary {
+  transactions: Transaction[];
+  balance: number;
+}
+
+interface Summary {
+  [storeName: string]: StoreSummary;
+}
+
 interface ProcessResponse {
   totalLines: number;
-  SuccessCount: number;
-  FailedCount: number;
+  successCount: number;
+  failedCount: number;
+  summary?: Summary;
+}
+
+interface SummaryRow {
+  storeName: string;
+  transaction: Transaction;
+  balance: number;
+  isBalanceRow: boolean;
 }
 
 @Component({
   selector: 'app-upload',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './upload.html',
   styleUrl: './upload.css',
 })
@@ -30,6 +70,8 @@ export class Upload implements OnInit {
   selectedFile: File | null = null;
   showDialog: boolean = false;
   processResult: ProcessResponse | null = null;
+  showSummary: boolean = false;
+  summaryRows: SummaryRow[] = [];
 
   constructor(
     private http: HttpClient,
@@ -57,13 +99,10 @@ export class Upload implements OnInit {
         )
       );
       
-      console.log('Response received:', response);
-      
       if (response) {
         if (response.url && response.filename) {
           this.presignedUrl = response.url;
           this.filename = response.filename;
-          console.log('Presigned URL and filename extracted successfully');
         } 
         else if (typeof response === 'object') {
           const url = response.url || response.presignedUrl || response.uploadUrl;
@@ -72,7 +111,6 @@ export class Upload implements OnInit {
           if (url && filename) {
             this.presignedUrl = url;
             this.filename = filename;
-            console.log('Presigned URL and filename extracted from alternative properties');
           } else {
             throw new Error(`Invalid response format. Received: ${JSON.stringify(response)}`);
           }
@@ -105,13 +143,6 @@ export class Upload implements OnInit {
       this.errorMessage = errorMsg;
     } finally {
       this.isLoading = false;
-      console.log('Loading completed, isLoading set to false');
-      console.log('Current state:', {
-        isLoading: this.isLoading,
-        errorMessage: this.errorMessage,
-        presignedUrl: this.presignedUrl,
-        filename: this.filename
-      });
       this.cdr.detectChanges();
     }
   }
@@ -151,23 +182,6 @@ export class Upload implements OnInit {
       });
 
       const fileContent = await this.readFileAsArrayBuffer(this.selectedFile);
-      
-      if (this.presignedUrl) {
-        try {
-          const url = new URL(this.presignedUrl);
-          const credentialParam = url.searchParams.get('X-Amz-Credential');
-          if (credentialParam) {
-            const accessKey = credentialParam.split('/')[0];
-            console.log('Access Key in presigned URL:', accessKey);
-            if (accessKey === 'localhost_admin') {
-              console.warn('WARNING: The presigned URL uses "localhost_admin" as the access key. MinIO requires the actual access key (e.g., "minio_admin").');
-            }
-          }
-        } catch (e) {
-          console.warn('Could not parse presigned URL:', e);
-        }
-      }
-      
       console.log('Uploading to presigned URL:', this.presignedUrl);
       
       await firstValueFrom(
@@ -177,12 +191,19 @@ export class Upload implements OnInit {
       const processResponse = await firstValueFrom(
         this.http.post<ProcessResponse>(
           'http://localhost:8080/api/v1/import',
-          { filename: this.filename },
+          { filename: this.filename, showSummary: this.showSummary },
           { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) }
         )
       );
 
       this.processResult = processResponse;
+      
+      if (processResponse.summary) {
+        this.buildSummaryRows(processResponse.summary);
+      } else {
+        this.summaryRows = [];
+      }
+      
       this.showDialog = true;
       
       this.selectedFile = null;
@@ -201,28 +222,7 @@ export class Upload implements OnInit {
         let errorText = typeof errorBody === 'string' ? errorBody : JSON.stringify(errorBody);
         
         if (typeof errorBody === 'string' && errorBody.includes('<Error>')) {
-          const codeMatch = errorBody.match(/<Code>(.*?)<\/Code>/);
-          const messageMatch = errorBody.match(/<Message>(.*?)<\/Message>/);
-          
-          if (codeMatch) {
-            const errorCode = codeMatch[1];
-            const errorMessage = messageMatch ? messageMatch[1] : '';
-            
-            console.log('MinIO Error Code:', errorCode);
-            console.log('MinIO Error Message:', errorMessage);
-            
-            if (errorCode === 'SignatureDoesNotMatch') {
-              errorMsg = `Signature mismatch: ${errorMessage || 'The presigned URL signature was calculated for a different hostname. When the backend generates the presigned URL, it must calculate the signature using "localhost:9000" as the hostname from the start (not "minio:9000"). The signature includes the Host header, so if the URL was originally signed for "minio:9000" but the browser sends it to "localhost:9000", the signature will be invalid. The backend needs to generate the presigned URL with hostname="localhost:9000" and calculate the signature accordingly.'}`;
-            } else if (errorCode === 'InvalidAccessKeyId') {
-              errorMsg = `Invalid Access Key: ${errorMessage || 'The Access Key ID in the presigned URL does not exist in MinIO. The backend needs to generate the presigned URL with the actual MinIO access key (e.g., "minio_admin") while keeping the hostname as "localhost:9000" for browser access.'}`;
-            } else if (errorCode === 'AccessDenied') {
-              errorMsg = `Access denied: ${errorMessage || 'The presigned URL does not have permission to upload to this location.'}`;
-            } else {
-              errorMsg = `MinIO Error (${errorCode}): ${errorMessage || 'Unknown error'}`;
-            }
-          } else {
             errorText = errorBody;
-          }
         }
         
         if (errorMsg === 'Failed to upload file') {
@@ -263,6 +263,38 @@ export class Upload implements OnInit {
   closeDialog(): void {
     this.showDialog = false;
     this.processResult = null;
+    this.summaryRows = [];
+  }
+
+  buildSummaryRows(summary: Summary): void {
+    this.summaryRows = [];
+    
+    Object.keys(summary).forEach(storeName => {
+      const storeSummary = summary[storeName];
+      
+      storeSummary.transactions.forEach(transaction => {
+        this.summaryRows.push({
+          storeName,
+          transaction,
+          balance: storeSummary.balance,
+          isBalanceRow: false
+        });
+      });
+      
+      this.summaryRows.push({
+        storeName,
+        transaction: {} as Transaction,
+        balance: storeSummary.balance,
+        isBalanceRow: true
+      });
+    });
+  }
+
+  formatCurrency(value: number): string {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
   }
 
   onRetry(): void {

@@ -13,8 +13,6 @@ public class TransactionType(
     public OperationNature Nature { get; init; } = nature;
     public OperationSign Sign { get; init; } = sign;
 
-    public virtual ICollection<Transaction> Transactions { get; init; }
-
     public static TransactionType Get(ushort type) => TransactionTypes.First(x => x.Type == type);
 
     private static TransactionType[] TransactionTypes =>

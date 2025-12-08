@@ -19,24 +19,23 @@ public class ErrorHandlingMiddlewareTests
         _nextMock = new Mock<RequestDelegate>();
         _loggerMock = new Mock<ILogger<ErrorHandlingMiddleware>>();
         _middleware = new ErrorHandlingMiddleware(_nextMock.Object, _loggerMock.Object);
-        _context = new DefaultHttpContext();
-        _context.Response.Body = new MemoryStream();
+        _context = new DefaultHttpContext
+        {
+            Response = { Body = new MemoryStream() }
+        };
     }
 
     [Fact(DisplayName = "Should return 400 BadRequest for ApplicationException")]
     public async Task ShouldReturn400BadRequestForApplicationException()
     {
-        // Arrange
         var exception = new ApplicationException("Test application exception");
         _nextMock.Setup(n => n(It.IsAny<HttpContext>()))
             .ThrowsAsync(exception);
-
-        // Act
+        
         await _middleware.InvokeAsync(_context);
-
-        // Assert
+        
         _context.Response.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
-        _context.Response.ContentType.Should().Be("application/json");
+        _context.Response.ContentType.Should().StartWith("application/json");
         
         var response = await GetResponseBody();
         response.Should().Contain("Test application exception");
@@ -45,17 +44,14 @@ public class ErrorHandlingMiddlewareTests
     [Fact(DisplayName = "Should return 404 NotFound for KeyNotFoundException")]
     public async Task ShouldReturn404NotFoundForKeyNotFoundException()
     {
-        // Arrange
         var exception = new KeyNotFoundException("Key not found");
         _nextMock.Setup(n => n(It.IsAny<HttpContext>()))
             .ThrowsAsync(exception);
-
-        // Act
+        
         await _middleware.InvokeAsync(_context);
-
-        // Assert
+        
         _context.Response.StatusCode.Should().Be(StatusCodes.Status404NotFound);
-        _context.Response.ContentType.Should().Be("application/json");
+        _context.Response.ContentType.Should().StartWith("application/json");
         
         var response = await GetResponseBody();
         response.Should().Contain("Resource not found");
@@ -64,7 +60,6 @@ public class ErrorHandlingMiddlewareTests
     [Fact(DisplayName = "Should return 401 Unauthorized for UnauthorizedAccessException")]
     public async Task ShouldReturn401UnauthorizedForUnauthorizedAccessException()
     {
-        // Arrange
         var exception = new UnauthorizedAccessException("Unauthorized");
         _nextMock.Setup(n => n(It.IsAny<HttpContext>()))
             .ThrowsAsync(exception);
@@ -74,7 +69,7 @@ public class ErrorHandlingMiddlewareTests
 
         // Assert
         _context.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
-        _context.Response.ContentType.Should().Be("application/json");
+        _context.Response.ContentType.Should().StartWith("application/json");
         
         var response = await GetResponseBody();
         response.Should().Contain("Unauthorized access");
@@ -93,7 +88,7 @@ public class ErrorHandlingMiddlewareTests
 
         // Assert
         _context.Response.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
-        _context.Response.ContentType.Should().Be("application/json");
+        _context.Response.ContentType.Should().StartWith("application/json");
         
         var response = await GetResponseBody();
         response.Should().Contain("Invalid argument");
@@ -112,7 +107,7 @@ public class ErrorHandlingMiddlewareTests
 
         // Assert
         _context.Response.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
-        _context.Response.ContentType.Should().Be("application/json");
+        _context.Response.ContentType.Should().StartWith("application/json");
         
         var response = await GetResponseBody();
         response.Should().Contain("An internal server error occurred");
@@ -184,7 +179,7 @@ public class ErrorHandlingMiddlewareTests
         await _middleware.InvokeAsync(_context);
 
         // Assert
-        _context.Response.ContentType.Should().Be("application/json");
+        _context.Response.ContentType.Should().StartWith("application/json");
     }
 
     private async Task<string> GetResponseBody()

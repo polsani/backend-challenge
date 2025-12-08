@@ -1,4 +1,5 @@
 using Challenge.Api.ErrorHandling;
+using Challenge.Api.Filters;
 using Challenge.Domain;
 using Challenge.Domain.Adapters;
 using Challenge.Infrastructure.Minio;
@@ -44,13 +45,10 @@ try
     builder.Services
         .AddOpenApi()
         .AddEndpointsApiExplorer()
-        .AddDbContext<DefaultDbContext>(options =>
-        {
-            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
-        })
         .AddValidatorsFromAssemblyContaining<Transaction>()
         .AddRepositories()
         .AddDomain()
+        .AddScoped<MemoryOptimizationFilter>()
         .AddStorage(builder.Configuration)
         .AddMapster() ;
 

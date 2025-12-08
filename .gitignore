@@ -493,7 +493,7 @@ fabric.properties
 data/
 
 ### Environment variables file
-.env
+#.env - Should not be persisted in the Git repository when using non local environment
 
 .DS_Store
 

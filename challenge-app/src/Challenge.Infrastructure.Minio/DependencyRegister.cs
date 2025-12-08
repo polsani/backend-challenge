@@ -10,7 +10,7 @@ public static class DependencyRegister
 {
     public static IServiceCollection AddStorage(this IServiceCollection services, IConfigurationManager configuration)
     {
-        var minioUrl = configuration.GetSection("Minio:Url").Value;
+        var minioUrl = configuration.GetSection("Minio:InternalUrl").Value;
         var minioAccessKey = configuration.GetSection("Minio:AccessKey").Value;
         var minioSecretKey = configuration.GetSection("Minio:SecretKey").Value;
         
